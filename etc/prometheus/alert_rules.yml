@@ -1,0 +1,92 @@
+groups:
+  - name: System Alerts
+    rules:
+      - alert: CritHighLoadAverage1
+        expr: node_load1 > 30
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Critical High Short Term Load
+      - alert: CritHighLoadAverage5
+        expr: node_load5 > 25
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Critical High Medium Term Load
+      - alert: CritHighLoadAverage15
+        expr: node_load15 > 20
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Critical High Long Term Load
+      - alert: WarnHighLoadAverage1
+        expr: node_load1 > 25
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Warning High Short Term Load
+      - alert: WarnHighLoadAverage5
+        expr: node_load5 > 20
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Warning High Medium Term Load
+      - alert: WarnHighLoadAverage15
+        expr: node_load15 > 15
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Warning High Long Term Load
+      - alert: DiskWillFillIn6Hours
+        expr: predict_linear(node_filesystem_free_bytes{fstype!="tmpfs"}[1h], 6*3600) < 0
+        for: 15m
+        labels:
+          severity: page
+      - alert: MemoryExhaustedIn6Hours
+        expr: predict_linear(node_memory_UsableFree_bytes[1h], 6*3600) < 0
+        for: 15m
+        labels:
+          severity: page
+      - alert: MachineDown
+        expr: up{job="infrastructure"} < 1
+        for: 0s
+        labels:
+          severity: page
+  - name: Platform Alerts
+    rules:
+      - alert: LongCommitLock
+        expr: pserve_relstorage_adapters_mysql_locker_MySQLLocker_hold_commit_lock_t{quantile="0.99", job!~"ds1.alpha|ds2.alpha|alpha-statsd"} > 10000
+        for: 30s
+        labels:
+          severity: page
+      - alert: CommitLockTesting
+        expr: pserve_relstorage_adapters_mysql_locker_MySQLLocker_hold_commit_lock_t{quantile="0.99", job=~"ds1.alpha|ds2.alpha|alpha-statsd"} > 50
+        for: 30s
+        labels:
+          severity: testing
+      - alert: ServerDown
+        expr: min(haproxy_server_up{job!~"alpha-haproxy"}) BY (job,server) < 1
+        for: 0s
+        labels:
+          severity: page
+      - alert: ServerDown
+        expr: min(haproxy_server_up{job=~"alpha-haproxy"}) BY (job,server) < 1
+        for: 15m
+        labels:
+          severity: alpha
+      - alert: EnvironmentDown
+        expr: probe_success{instance!="https://alpha.nextthought.com"} < 1
+        for: 0s
+        labels:
+          severity: page
+      - alert: Http5XXCount
+        expr: idelta(haproxy_frontend_http_responses_total{code="5xx", frontend="all", job!="alpha-haproxy"}[1m]) > 0
+        for: 0s
+        labels:
+          severity: page

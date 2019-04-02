@@ -1,0 +1,69 @@
+global:
+  resolve_timeout: 30s
+  smtp_smarthost: email-smtp.us-east-1.amazonaws.com:587
+  smtp_hello: alerts.nextthought.io
+  smtp_auth_username: ***REMOVED***
+  smtp_auth_password: ***REMOVED***
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'mattermost-testing'
+  routes:
+  - receiver: 'email-alpha'
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 1h
+    continue: false
+    match:
+      severity: alpha
+  - receiver: 'email'
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 1h
+    continue: true
+    match:
+      severity: page
+  - receiver: 'mattermost-infrastructure'
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 1h
+    continue: true
+    match:
+      severity: page
+receivers:
+- name: 'web.hook'
+  webhook_configs:
+  - url: 'http://127.0.0.1:5001/'
+- name: 'mattermost-testing'
+  slack_configs:
+  - api_url: https://team.nextthought.io/hooks/***REMOVED***
+    send_resolved: true
+- name: 'mattermost-infrastructure'
+  slack_configs:
+  - api_url: https://team.nextthought.io/hooks/***REMOVED***
+    send_resolved: true
+- name: 'email'
+  email_configs:
+  - to: 'alerts@nextthought.com'
+    send_resolved: true
+    from: 'automated-emails@nextthought.com'
+- name: 'email-alpha'
+  email_configs:
+  - to: 'alerts-alpha@nextthought.com'
+    send_resolved: true
+    from: 'automated-emails@nextthought.com'
+- name: 'email-testing'
+  email_configs:
+  - to: 'sean.jones@nextthought.com'
+    send_resolved: true
+    from: 'automated-emails@nextthought.com'
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']

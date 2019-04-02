@@ -1,0 +1,149 @@
+# my global config
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Remote storage configuration
+remote_write:
+ - url: "http://localhost:9201/write"
+remote_read:
+ - url: "http://localhost:9201/read"
+   read_recent: true
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - path_prefix: "/alerts/"
+    static_configs:
+    - targets:
+       - prometheus-alert1.nti:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "recording_rules.yml"
+  - "alert_rules.yml"
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+    - targets: ['localhost:9090']
+
+#  - job_name: 'jenkins'
+#    metric_path: 'prometheus'
+#    scheme: 'https'
+#    static_configs:
+#    - targets: ['build.nextthought.com:443']
+  - job_name: 'ds1.alpha'
+    static_configs:
+    - targets: ['ds1.alpha:9102','ds1.alpha:9100']
+  - job_name: 'ds2.alpha'
+    static_configs:
+    - targets: ['ds2.alpha:9102','ds2.alpha:9100']
+  - job_name: 'db1.alpha'
+    static_configs:
+    - targets: ['db1.alpha:9100']
+  - job_name: 'ds1.ou-test'
+    static_configs:
+    - targets: ['ds1.ou-test:9102','ds1.ou-test:9100']
+  - job_name: 'db1.ou-test'
+    static_configs:
+    - targets: ['db1.ou-test:9100']
+  - job_name: 'ds1.assoc'
+    static_configs:
+    - targets: ['ds1.assoc:9102','ds1.assoc:9100']
+  - job_name: 'ds2.assoc'
+    static_configs:
+    - targets: ['ds2.assoc:9102','ds2.assoc:9100']
+  - job_name: 'db1.assoc'
+    static_configs:
+    - targets: ['db1.assoc:9100']
+  - job_name: 'ds1.janux'
+    static_configs:
+    - targets: ['ds1.janux:9102','ds1.janux:9100']
+  - job_name: 'ds2.janux'
+    static_configs:
+    - targets: ['ds2.janux:9102','ds2.janux:9100']
+  - job_name: 'db1.janux'
+    static_configs:
+    - targets: ['db1.janux:9100']
+  - job_name: 'db2.janux'
+    static_configs:
+    - targets: ['db2.janux:9100']
+  - job_name: 'ds1.prod'
+    static_configs:
+    - targets: ['ds1.prod:9102','ds1.prod:9100']
+  - job_name: 'ds2.prod'
+    static_configs:
+    - targets: ['ds2.prod:9102','ds2.prod:9100']
+  - job_name: 'db1.prod'
+    static_configs:
+    - targets: ['db1.prod:9100']
+  - job_name: 'db2.prod'
+    static_configs:
+    - targets: ['db2.prod:9100']
+  - job_name: 'alpha-haproxy'
+    static_configs:
+    - targets: ['web1.alpha:9101','web2.alpha:9101']
+  - job_name: 'assoc-haproxy'
+    static_configs:
+    - targets: ['lb1.assoc:9101']
+  - job_name: 'beta-haproxy'
+    static_configs:
+    - targets: ['lb1.ou-test:9101','ss11-beta.nti:9101']
+  - job_name: 'janux-haproxy'
+    static_configs:
+    - targets: ['lb1.janux:9101']
+  - job_name: 'mathcounts-haproxy'
+    static_configs:
+    - targets: ['ssl.mathcounts:9101']
+  - job_name: 'prod-haproxy'
+    static_configs:
+    - targets: ['lb1.prod:9101']
+  - job_name: 'oubound-alpha-haproxy'
+    static_configs:
+    - targets: ['lb1.oubound-alpha:9101']
+  - job_name: 'oubound-prod-haproxy'
+    static_configs:
+    - targets: ['lb1.oubound-prod:9101']
+  - job_name: 'rntpros-haproxy'
+    static_configs:
+    - targets: ['ssl1-rnt.nti:9101']
+  - job_name: 'rntpros-statsd'
+    static_configs:
+    - targets: ['ds1-rnt.nti:9102','ds2-rnt.nti:9102']
+  - job_name: 'rntpros-system'
+    static_configs:
+    - targets: ['db1-rnt.nti:9100','ds1-rnt.nti:9100','ds2-rnt.nti:9100','ssl1-rnt.nti:9100','web1-rnt.nti:9100','web2-rnt.nti:9100']
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://beta.nextthought.com
+        - https://alpha.nextthought.com
+        - https://rntpros.nextthought.com
+        - https://janux.ou.edu
+        - https://demo.nextthought.com
+        - https://ifsta.nextthought.com
+        - https://mathcounts.nextthought.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: admin-alpha.nti:9115
+  - job_name: 'infrastructure'
+    static_configs:
+    - targets: ['app1.4pp:9100','app2.4pp:9100','app1.hsc:9100','app2.hsc:9100','aux1.4pp:9100','dmz1.4pp:9100','dmz1.hsc:9100','data1.4pp:9100','data2.4pp:9100','data1.hsc:9100','data2.hsc:9100','san1.4pp:9100']

@@ -1,0 +1,17 @@
+groups:
+  - name: http_requests
+    rules:
+      - record: pserve_pyramid_response_rate
+        expr: deriv(pserve_pyramid_response[30s])
+  - name: cpu
+    rules:
+      - record: node_cpu_utilization
+        expr: deriv(node_cpu_seconds_total[30s])
+      - record: node_cpu_utilization_max
+        expr: 1 - (min by (job,instance) (deriv(node_cpu_seconds_total{mode="idle"}[30s])))
+      - record: node_cpu_utilization_avg
+        expr: 1 - (avg by (job,instance) (deriv(node_cpu_seconds_total{mode="idle"}[30s])))
+  - name: memory
+    rules:
+      - record: node_memory_UsableFree_bytes
+        expr: node_memory_Cached_bytes + node_memory_MemFree_bytes + node_memory_Buffers_bytes
